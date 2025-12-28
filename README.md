@@ -1,11 +1,23 @@
-<div align="center">
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+# Les Rhéteurs
 
-  <h1>Built with AI Studio</h2>
+**Les Rhéteurs** est une plateforme littéraire élégante conçue pour partager et explorer les lectures hebdomadaires. Inspirée par les salons littéraires classiques et augmentée par l'intelligence artificielle, elle permet à chacun d'exposer ses découvertes et de recevoir des analyses approfondies.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## Fonctionnalités Clés
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+- **Partage de Lectures** : Publiez vos résumés et analyses de livres.
+- **Intelligence Artificielle (Gemini)** : 
+  - Génération de titres poétiques pour vos partages.
+  - Analyse littéraire automatique pour chaque publication (thèmes, questions de réflexion, citations).
+- **Interface Raffinée** : Design épuré avec une typographie soignée (Playfair Display & Inter).
+- **Base de données Temps Réel** : Propulsé par Supabase pour une synchronisation instantanée.
 
-</div>
+## Configuration de la Base de Données
+
+Pour utiliser l'application avec votre propre instance Supabase, exécutez le script SQL fourni dans le fichier `database.txt` dans votre éditeur SQL Supabase.
+
+## Technologies Utilisées
+
+- **Frontend** : React 19, Tailwind CSS.
+- **Backend** : Supabase (PostgreSQL).
+- **Intelligence Artificielle** : Google Gemini API via le SDK `@google/genai`.

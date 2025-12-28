@@ -1,0 +1,58 @@
+
+-- SQL Script for Les Rhéteurs (Updated: Full Management & Search Support)
+
+-- 1. Table des publications
+CREATE TABLE IF NOT EXISTS public.posts (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    title TEXT NOT NULL,
+    book_title TEXT NOT NULL,
+    book_author TEXT,
+    content TEXT NOT NULL, -- Stocke le HTML de l'éditeur riche
+    user_name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    cover_url TEXT,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE
+);
+
+-- Index de recherche plein texte pour le contenu riche
+CREATE INDEX IF NOT EXISTS posts_fts_idx ON public.posts 
+USING gin(to_tsvector('french', title || ' ' || book_title || ' ' || content));
+
+-- RLS pour les posts
+ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+
+-- Lecture publique : Tout le monde peut voir les exposés
+DROP POLICY IF EXISTS "Allow public read access" ON public.posts;
+CREATE POLICY "Allow public read access" ON public.posts FOR SELECT USING (true);
+
+-- Insertion : Uniquement pour les utilisateurs connectés
+DROP POLICY IF EXISTS "Allow authenticated insert" ON public.posts;
+CREATE POLICY "Allow authenticated insert" ON public.posts FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Modification : Uniquement le propriétaire
+DROP POLICY IF EXISTS "Users can update own posts" ON public.posts;
+CREATE POLICY "Users can update own posts" ON public.posts FOR UPDATE USING (auth.uid() = user_id);
+
+-- Suppression : Uniquement le propriétaire
+DROP POLICY IF EXISTS "Users can delete own posts" ON public.posts;
+CREATE POLICY "Users can delete own posts" ON public.posts FOR DELETE USING (auth.uid() = user_id);
+
+-- 2. Table des profils
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL PRIMARY KEY,
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  username TEXT UNIQUE,
+  full_name TEXT,
+  avatar_url TEXT,
+  bio TEXT
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Profiles are public" ON public.profiles;
+CREATE POLICY "Profiles are public" ON public.profiles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+
+-- 3. Storage
+-- N'oubliez pas de créer les buckets 'covers' et 'avatars' dans l'interface Supabase avec accès public.
