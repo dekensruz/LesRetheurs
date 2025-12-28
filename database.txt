@@ -1,7 +1,7 @@
 
--- SQL Script for Les Rhéteurs (Full Schema)
+-- SQL Script for Les Rhéteurs (Full Schema & Security)
 
--- 1. Table des Profiles (doit exister en premier pour les références)
+-- 1. Table des Profiles
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL PRIMARY KEY,
   updated_at TIMESTAMPTZ DEFAULT now(),
@@ -65,35 +65,73 @@ CREATE TABLE IF NOT EXISTS public.circle_readings (
     book_author TEXT,
     start_date DATE DEFAULT CURRENT_DATE,
     end_date DATE,
+    synthesis TEXT,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Policies (RLS)
-ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.replies ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.circles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.circle_members ENABLE ROW LEVEL SECURITY;
+-- 7. Tables des votes, citations, progression
+CREATE TABLE IF NOT EXISTS public.circle_polls (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    circle_id UUID REFERENCES public.circles(id) ON DELETE CASCADE,
+    options JSONB NOT NULL,
+    is_closed BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.circle_poll_votes (
+    poll_id UUID REFERENCES public.circle_polls(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    option_index INTEGER NOT NULL,
+    PRIMARY KEY (poll_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.circle_quotes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    circle_id UUID REFERENCES public.circles(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    page_number TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.circle_threads (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    circle_id UUID REFERENCES public.circles(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.circle_thread_messages (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    thread_id UUID REFERENCES public.circle_threads(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.circle_reading_roles (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    circle_id UUID REFERENCES public.circles(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    role_name TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(circle_id, role_name)
+);
+
+CREATE TABLE IF NOT EXISTS public.circle_member_progress (
+    circle_id UUID REFERENCES public.circles(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    percentage INTEGER DEFAULT 0 CHECK (percentage >= 0 AND percentage <= 100),
+    PRIMARY KEY (circle_id, user_id)
+);
+
+-- ACTIVATION RLS
+ALTER TABLE public.circle_poll_votes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.circle_thread_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.circle_readings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Post Policies
-CREATE POLICY "Allow public read posts" ON public.posts FOR SELECT USING (true);
-CREATE POLICY "Users can insert own posts" ON public.posts FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own posts" ON public.posts FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own posts" ON public.posts FOR DELETE USING (auth.uid() = user_id);
-
--- Reply Policies
-CREATE POLICY "Public read replies" ON public.replies FOR SELECT USING (true);
-CREATE POLICY "Auth insert replies" ON public.replies FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Owners update replies" ON public.replies FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Owners delete replies" ON public.replies FOR DELETE USING (auth.uid() = user_id);
-
--- Profile Policies
-CREATE POLICY "Public read profiles" ON public.profiles FOR SELECT USING (true);
-CREATE POLICY "Users update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
-
--- Circle Policies
-CREATE POLICY "Public read circles" ON public.circles FOR SELECT USING (true);
-CREATE POLICY "Auth insert circles" ON public.circles FOR INSERT WITH CHECK (auth.uid() = creator_id);
-CREATE POLICY "Creators manage readings" ON public.circle_readings FOR ALL USING (EXISTS (SELECT 1 FROM public.circles WHERE id = circle_id AND creator_id = auth.uid()));
-CREATE POLICY "Public read readings" ON public.circle_readings FOR SELECT USING (true);
+CREATE POLICY "Public Read Votes" ON public.circle_poll_votes FOR SELECT USING (true);
+CREATE POLICY "Auth Vote" ON public.circle_poll_votes FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Public Read Thread Messages" ON public.circle_thread_messages FOR SELECT USING (true);
+CREATE POLICY "Auth Post Thread Message" ON public.circle_thread_messages FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Creators manage readings" ON public.circle_readings FOR ALL USING (EXISTS (SELECT 1 FROM public.circles WHERE id = circle_readings.circle_id AND creator_id = auth.uid()));

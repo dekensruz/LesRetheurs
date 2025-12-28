@@ -21,6 +21,14 @@
             background-image: radial-gradient(#e5e7eb 0.5px, transparent 0.5px);
             background-size: 20px 20px;
         }
+        /* Masquer la barre de défilement tout en gardant le scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 <script type="importmap">
 {

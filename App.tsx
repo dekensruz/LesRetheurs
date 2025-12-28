@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from './supabase';
-import { Post, Profile } from './types';
+import { Post, Profile, PostCategory } from './types';
 import { PostCard } from './components/PostCard';
 import { PostModal } from './components/PostModal';
 import { PostForm } from './components/PostForm';
@@ -120,6 +120,8 @@ const App: React.FC = () => {
     return result;
   }, [posts, currentView, filter, searchQuery, session]);
 
+  const categories = useMemo(() => ['all', ...Object.values(PostCategory)], []);
+
   return (
     <div className="min-h-screen pb-12 bg-[#fdfbf7]">
       <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-200 via-stone-900 to-amber-200 z-[60]"></div>
@@ -184,8 +186,8 @@ const App: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4 md:px-6">
         {currentView !== 'circles' && (
           <div className="mb-8 flex flex-wrap justify-center gap-2">
-            {['all', 'Fiction', 'Non-Fiction', 'Philosophie', 'Poésie', 'Histoire'].map(cat => (
-              <button key={cat} onClick={() => setFilter(cat)} className={`px-4 py-2 rounded-full text-[10px] font-bold border ${filter === cat ? 'bg-stone-900 text-white' : 'bg-white text-stone-500'}`}>{cat === 'all' ? 'Tout' : cat}</button>
+            {categories.map(cat => (
+              <button key={cat} onClick={() => setFilter(cat)} className={`px-4 py-2 rounded-full text-[10px] font-bold border transition-colors ${filter === cat ? 'bg-stone-900 text-white' : 'bg-white text-stone-500 hover:bg-stone-50'}`}>{cat === 'all' ? 'Tout' : cat}</button>
             ))}
           </div>
         )}
