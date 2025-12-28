@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { supabase } from './supabase';
 import { Post, Profile } from './types';
@@ -147,7 +146,7 @@ const App: React.FC = () => {
               <span className="font-serif text-lg md:text-2xl font-bold">R</span>
             </div>
             <div className="flex flex-col">
-              <h1 className="font-serif text-sm md:text-2xl font-extrabold text-stone-900 tracking-tight leading-none">Les Rhéteurs</h1>
+              <h1 className="font-serif text-sm md:text-2xl font-extrabold text-stone-900 tracking-tight leading-none text-nowrap">Les Rhéteurs</h1>
               <span className="hidden xs:block text-[8px] md:text-[10px] uppercase tracking-[0.2em] font-bold text-amber-600 mt-0.5 md:mt-1">L'Agora Littéraire</span>
             </div>
           </div>
@@ -157,10 +156,10 @@ const App: React.FC = () => {
               <>
                 <button 
                   onClick={() => setCurrentView(currentView === 'salon' ? 'dashboard' : 'salon')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all ${currentView === 'dashboard' ? 'bg-amber-100 text-amber-900' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50'}`}
+                  className={`flex items-center gap-1.5 px-3 py-2 md:px-4 md:py-2.5 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all ${currentView === 'dashboard' ? 'bg-amber-100 text-amber-900 shadow-inner' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50'}`}
                 >
                   <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                  <span className="xs:inline">{currentView === 'salon' ? 'Mon Espace' : 'Le Salon'}</span>
+                  <span className="inline">{currentView === 'salon' ? 'Mon Espace' : 'Le Salon'}</span>
                 </button>
                 <button 
                   onClick={() => setIsProfileOpen(true)}
@@ -206,7 +205,6 @@ const App: React.FC = () => {
       </header>
 
       <section className="max-w-7xl mx-auto px-4 md:px-6">
-        {/* Bouton Mon Espace positionné juste avant la section du salon */}
         {session && (
           <div className="flex justify-center mb-10">
             <button 
